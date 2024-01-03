@@ -13,13 +13,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-<<<<<<< HEAD
-=======
 /**
  * https://adventofcode.com/2023/day/1
  */
 
->>>>>>> 359d5cc (2023 day 1 (#1))
 @Log
 public class Day01 {
     @RequiredArgsConstructor
