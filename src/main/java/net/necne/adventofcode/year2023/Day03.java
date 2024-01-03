@@ -9,13 +9,12 @@ import lombok.extern.java.Log;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * https://adventofcode.com/2023/day/3
@@ -44,14 +43,22 @@ public class Day03 {
 
     @Data
     @Accessors(fluent = true)
+    @RequiredArgsConstructor(staticName = "of")
+    static class Symbol {
+        final Pos pos;
+        final char symbol;
+    }
+
+    @Data
+    @Accessors(fluent = true)
     @Builder
     static class Schematic {
-        List<Number> numbers;
-        Set<Pos> symbols;
+        Set<Number> numbers;
+        Set<Symbol> symbols;
     }
 
     static Schematic parse(String resource) throws IOException {
-        Schematic.SchematicBuilder schematic = Schematic.builder().numbers(new ArrayList<>()).symbols(new HashSet<>());
+        Schematic.SchematicBuilder schematic = Schematic.builder().numbers(new HashSet<>()).symbols(new HashSet<>());
         String[] lines = Resources.toString(Resources.getResource(resource), Charset.defaultCharset()).split("\n");
         int y = -1;
         for(String line : lines) {
@@ -74,7 +81,7 @@ public class Day03 {
                     case '@':
                     case '%':
                     case '&':
-                        schematic.symbols.add(Pos.of(x, y));
+                        schematic.symbols.add(Symbol.of(Pos.of(x, y), line.charAt(0)));
                         ++x;
                         line = line.substring(1);
                         break;
@@ -93,7 +100,7 @@ public class Day03 {
         return schematic.build();
     }
 
-    static boolean isPartNumber(Number number, Pos symbol){
+    static boolean isAdjacent(Number number, Pos symbol){
         Pos pos = number.pos;
         //top
         if(symbol.y < pos.y - 1) return false;
@@ -105,13 +112,11 @@ public class Day03 {
         return symbol.x <= pos.x + (int)Math.log10(number.num) + 1;
     }
 
-    static boolean isPartNumber(Number number, Set<Pos> symbols){
-        return symbols.parallelStream().anyMatch(symbol -> isPartNumber(number, symbol));
+    static boolean isPartNumber(Number number, Set<Symbol> symbols){
+        return symbols.parallelStream().anyMatch(symbol -> isAdjacent(number, symbol.pos));
     }
 
-    static int sumPartNumbers(String resource) throws IOException {
-        Schematic schematic = parse(resource);
-
+    static int sumPartNumbers(Schematic schematic) {
         return schematic.numbers.stream()
                 .filter(number -> isPartNumber(number, schematic.symbols()))
                 .map(Number::num)
@@ -119,10 +124,27 @@ public class Day03 {
                 .orElse(0);
     }
 
+    static Set<Number> adjacentPartNumbers(Symbol symbol, Set<Number> numbers){
+        return numbers.stream().filter(number -> isAdjacent(number, symbol.pos)).collect(Collectors.toSet());
+    }
+
+    static int sumGearRatio(Schematic schematic) {
+        return schematic.symbols.parallelStream()
+                    .filter(symbol -> symbol.symbol == '*')
+                    .map(symbol -> adjacentPartNumbers(symbol, schematic.numbers))
+                    .filter(adjacentPartNumbers -> adjacentPartNumbers.size() == 2)
+                    .mapToInt(adjacentPartNumbers -> adjacentPartNumbers.stream().mapToInt(Number::num).reduce(1, (i0, i1) -> i0*i1)) //multiply pairs
+                    .sum();
+    }
+
     public static void main(String[] args) {
         try {
-            log.info("part1 sample " + sumPartNumbers("2023/03/sample")); // 4361
-            log.info("part1 puzzle " + sumPartNumbers("2023/03/puzzle")); // 509115
+            Schematic sample = parse("2023/03/sample");
+            Schematic puzzle = parse("2023/03/puzzle");
+            log.info("part1 sample " + sumPartNumbers(sample)); // 4361
+            log.info("part1 puzzle " + sumPartNumbers(puzzle)); // 509115
+            log.info("part2 sample " + sumGearRatio(sample)); // 467835
+            log.info("part2 puzzle " + sumGearRatio(puzzle)); // 75220503
         }
         catch(Exception e){
             log.log(Level.SEVERE, "main", e);
