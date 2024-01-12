@@ -30,13 +30,17 @@ public class Day04 {
         final Set<Integer> winners;
         final Set<Integer> candidates;
 
+        long matches(){
+            return candidates.stream().filter(winners::contains).count();
+        }
+
         long points() {
-            var matches = candidates.stream().filter(winners::contains).count();
+            var matches = matches();
             return matches == 0L ? 0L : (long)Math.pow(2, matches-1);
         }
     }
 
-    static Set<Integer> parseInts(String str){
+    static Set<Integer> parseInts(String str) {
         return Arrays.stream(str.split(" +")).map(Integer::parseInt).collect(Collectors.toSet());
     }
 
@@ -61,13 +65,37 @@ public class Day04 {
                 .reduce(Long::sum).orElse(0L);
     }
 
+    static long countCards(List<Card> cards) {
+        var count = 0L;
+        // number of extra cards that are outstanding
+        List<Long> dupesDue = new ArrayList<>();
+        for(Card card : cards){
+            var copies = 1 + dupesDue.size();
+            count += copies;
+
+            dupesDue = dupesDue.stream()
+                    .map(i -> i -= 1)
+                    .filter(i -> i > 0)
+                    .collect(Collectors.toList());
+
+            var matches = card.matches();
+            if(matches > 0) {
+                for (long i = 0; i < copies; ++i) dupesDue.add(matches);
+            }
+        }
+        return count;
+    }
+
     public static void main(String[] args) {
         try {
             var sampleCards = parseData("2023/04/sample");
-            var puzzleCards = parseData("2023/04/puzzle");
             log.info("sample cards " + sampleCards);
-            log.info("sample points " + sumPoints(sampleCards));
-            log.info("puzzle points " + sumPoints(puzzleCards));
+            log.info("sample points " + sumPoints(sampleCards)); //13
+            log.info("sample count " + countCards(sampleCards)); //30
+
+            var puzzleCards = parseData("2023/04/puzzle");
+            log.info("puzzle points " + sumPoints(puzzleCards)); //32001
+            log.info("puzzle count " + countCards(puzzleCards)); //5037841
         }
         catch(Exception e){
             log.log(Level.SEVERE, "main", e);
