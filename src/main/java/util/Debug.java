@@ -1,7 +1,11 @@
 package util;
 
+import lombok.extern.java.Log;
+
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 
+@Log
 public class Debug {
 
     public static String toStringGroups(Matcher matcher){
@@ -13,4 +17,10 @@ public class Debug {
         }
         return sb.toString();
     }
+
+    public static <T> boolean log(T type){
+        log.info("" + type);
+        return true;
+    }
+
 }
