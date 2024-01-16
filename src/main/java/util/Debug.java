@@ -17,10 +17,4 @@ public class Debug {
         }
         return sb.toString();
     }
-
-    public static <T> boolean log(T type){
-        log.info("" + type);
-        return true;
-    }
-
 }
