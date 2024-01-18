@@ -14,7 +14,7 @@ public class Timer {
     final static String SPLIT_FORMAT = "split %dms %s";
     public void split(String label) {
         var currentMs = System.currentTimeMillis();
-        log.info(SPLIT_FORMAT.formatted(splitMs - startMs, label));
+        log.info(SPLIT_FORMAT.formatted(currentMs - startMs, label));
         splitMs = currentMs;
     }
 
